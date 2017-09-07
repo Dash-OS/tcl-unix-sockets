@@ -1,0 +1,7 @@
+#ifndef _UDS_CONFIG_H
+#define _UDS_CONFIG_H
+
+#define UDS_PKGNAME		"@PACKAGE_NAME@"
+#define UDS_PKGVERSION	"@PACKAGE_VERSION@"
+
+#endif

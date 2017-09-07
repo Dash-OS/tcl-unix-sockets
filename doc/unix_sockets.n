@@ -1,0 +1,78 @@
+.TH unix_sockets n 0.1 "Tcl-Extensions"
+.HS unix_sockets tcl
+.de CS
+.RS
+.nf
+.ta .25i .5i .75i 1i
+..
+.de CE
+.fi
+.RE
+..
+.BS
+.SH NAME
+unix_sockets \- Communicate using unix domain sockets
+.SH SYNOPSIS
+\fBunix_sockets::listen\fI path accept_handler\fR
+.br
+\fBunix_sockets::connect\fI path\fR
+.br
+.SH DESCRIPTION
+Unix domain sockets are a filesystem based IPC mechanism similar to IP sockets,
+except that they can only be used by processes on the same system.  This
+package provides a wrapper to use them from Tcl scripts.
+.TP
+\fBunix_sockets::listen\fI path accept_handler\fR
+.
+Open a listening socket with the path \fIpath\fR.  If \fIpath\fR already
+exists, it is unlinked first.  You must have permission to create \fIpath\fR
+in it's parent directory.  When a client connects to the listening socket,
+\fIaccept_handler\fR is invoked with the channel handle of the new client
+connection appended.
+.TP
+\fBunix_sockets::connect\fI path\fR
+.
+Connect as a client to the unix domain socket \fIpath\fR.  The channel
+handle for the new socket is returned.
+.SH EXAMPLE
+A simple server that echos back to the client the first line it sends, then
+closes the socket:
+.PP
+.CS
+\fBproc readable {con} {
+    set msg [gets $con]
+    puts $con $msg
+    close $con
+}
+
+proc accept {con} {
+    chan event $con readable [list readable $con]
+}
+
+set listen   [unix_sockets::listen /tmp/example.socket accept]
+
+vwait ::forever
+\fR
+.CE
+.PP
+A client that opens a socket, writes a line to it, waits for a response and
+exits:
+.PP
+.CS
+\fBproc readable {con} {
+    set msg [gets $con]
+    puts "got response: ($msg)"
+    set ::done 1
+}
+
+set con     [unix_sockets::connect /tmp/example.socket]
+puts $con "hello, world"
+flush $con
+chan event $con readable [list readable $con]
+vwait ::done
+\fR
+.CE
+.SH "SEE ALSO"
+close(n), chan(n), socket(n), read(n), puts(n), eof(n), fblocked(n), flush(n)
+.SH KEYWORDS
+socket, channel, unix, ipc

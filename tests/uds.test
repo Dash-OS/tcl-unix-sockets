@@ -1,0 +1,63 @@
+# vim: ft=tcl foldmethod=marker foldmarker=<<<,>>> ts=4 shiftwidth=4
+
+if {[lsearch [namespace children] ::tcltest] == -1} {
+	package require tcltest 2.2.5
+	namespace import ::tcltest::*
+}
+
+package require unix_sockets
+
+set sockdir	[makeDirectory sockets]
+
+test uds-1.1 {open a listening socket} -body { #<<<
+	set listen	[unix_sockets::listen [file join $sockdir uds-1.1] [list apply {
+		{con} {
+			close $con
+		}
+	}]]
+} -cleanup {
+	if {[info exists listen]} {
+		close $listen
+	}
+} -match regexp -result {^unix_socket[0-9+]$}
+#>>>
+test uds-1.2 {echo loopback} -body { #<<<
+	set listen	[unix_sockets::listen [file join $sockdir uds-1.2] [list apply {
+		{con} {
+			chan event $con readable [list apply {
+				{con} {
+					set msg	[gets $con]
+					puts $con $msg
+					flush $con
+					close $con
+				}
+			} $con]
+		}
+	}]]
+	set client	[unix_sockets::connect [file join $sockdir uds-1.2]]
+	chan configure $client -blocking 1
+	chan event $client readable [list apply {
+		{con} {
+			set msg	[gets $con]
+			set ::foo	$msg
+		}
+	} $client]
+	puts $client "hello, world"
+	flush $client
+	after 1000 {set ::foo 2}
+	vwait ::foo
+	set ::foo
+} -cleanup {
+	if {[info exists listen]} {
+		close $listen
+	}
+	if {[info exists client]} {
+		close $client
+	}
+} -result {hello, world}
+#>>>
+
+::tcltest::cleanupTests
+return
+
+
