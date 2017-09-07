@@ -55,3 +55,7 @@ chan flush $clientID
 
 vwait complete
 ```
+
+### Other Examples
+
+ - [cluster-comm](https://github.com/Dash-OS/cluster-comm/blob/master/cluster/protocols/cluster-unix.tcl) - unix_sockets is used to provide unix socket support to cluster-comm.
