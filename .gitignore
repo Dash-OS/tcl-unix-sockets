@@ -9,4 +9,5 @@ core
 core.*
 pkgIndex.tcl
 teapot.txt
+.DS_Store
 teapot
